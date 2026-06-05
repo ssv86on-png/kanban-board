@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ХОЛДИНГ — АДМИН-ПАНЕЛЬ</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f1a; color: #e0e0e0; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 20px; border-bottom: 1px solid #2a2a4a; position: sticky; top: 0; z-index: 100; }
+  .header h1 { font-size: 24px; color: #fff; margin-bottom: 5px; }
+  .header .meta { font-size: 12px; color: #888; }
+  .header .nav { margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .header .nav a { color: #448aff; text-decoration: none; font-size: 13px; padding: 4px 10px; border: 1px solid #3a3a5a; border-radius: 4px; }
+  .header .nav a:hover { background: #2a2a4a; }
+  .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .filters select, .filters input { background: #1e1e35; color: #e0e0e0; border: 1px solid #3a3a5a; padding: 8px 12px; border-radius: 6px; font-size: 14px; }
+  .filters input { flex: 1; min-width: 200px; }
+
+  /* Dashboard layout */
+  .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 20px; }
+  .dashboard-card { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 10px; padding: 16px; }
+  .dashboard-card h3 { font-size: 14px; color: #aaa; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  .dashboard-card.full-width { grid-column: 1 / -1; }
+  .dashboard-card canvas { max-height: 300px; }
+  .dashboard-card .stat-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+  .dashboard-card .stat-cell { flex: 1; min-width: 120px; background: #141428; padding: 10px; border-radius: 6px; border: 1px solid #2a2a4a; text-align: center; }
+  .dashboard-card .stat-cell .num { font-size: 28px; font-weight: bold; display: block; color: #fff; }
+  .dashboard-card .stat-cell .label { color: #888; font-size: 11px; text-transform: uppercase; margin-top: 2px; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #16213e; color: #888; padding: 8px 10px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 11px; border-bottom: 2px solid #2a2a4a; }
+  td { padding: 8px 10px; border-bottom: 1px solid #1e1e35; }
+  tr:hover td { background: #1e1e35; }
+  
+  /* History browser */
+  .history-list { max-height: 400px; overflow-y: auto; }
+  .history-item { padding: 10px; border-bottom: 1px solid #2a2a4a; display: flex; gap: 10px; align-items: flex-start; }
+  .history-item .h-date { color: #888; font-size: 12px; min-width: 80px; flex-shrink: 0; padding-top: 2px; }
+  .history-item .h-company { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; margin-right: 4px; }
+  .history-item .h-event { color: #ccc; font-size: 13px; }
+  .history-search { width: 100%; padding: 8px 12px; background: #1e1e35; color: #e0e0e0; border: 1px solid #3a3a5a; border-radius: 6px; font-size: 14px; margin-bottom: 10px; }
+
+  /* Company colors */
+  .cmp-АрхДетали { background: #6a1b9a; color: #fff; }
+  .cmp-Академия { background: #2e7d32; color: #fff; }
+  .cmp-СВ-Клининг { background: #1565c0; color: #fff; }
+  .cmp-НейроСфера { background: #f9a825; color: #000; }
+  .cmp-Техника { background: #c62828; color: #fff; }
+  .cmp-Люди { background: #4a148c; color: #fff; }
+  .cmp-unknown { background: #555; color: #fff; }
+
+  .tag-sm { display: inline-block; padding: 1px 4px; border-radius: 3px; font-size: 10px; background: #2a2a4a; color: #aaa; }
+
+  .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .badge-high { background: #ff5252; color: #fff; }
+  .badge-medium { background: #ffd740; color: #000; }
+  .badge-low { background: #69f0ae; color: #000; }
+  .badge-todo { background: #ffd700; color: #000; }
+  .badge-progress { background: #00e676; color: #000; }
+  .badge-done { background: #448aff; color: #fff; }
+  .badge-archive { background: #666; color: #fff; }
+
+  .tabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 1px solid #2a2a4a; }
+  .tab-btn { padding: 8px 16px; background: none; border: none; color: #888; cursor: pointer; font-size: 13px; border-bottom: 2px solid transparent; }
+  .tab-btn.active { color: #448aff; border-bottom-color: #448aff; }
+  .tab-btn:hover { color: #aaa; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Login screen */
+  .login-overlay { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f0f1a; z-index: 9999; justify-content: center; align-items: center; }
+  .login-box { background: #1a1a2e; border: 1px solid #3a3a5a; border-radius: 12px; padding: 32px; max-width: 380px; width: 90%; text-align: center; }
+  .login-box h2 { font-size: 20px; color: #fff; margin-bottom: 8px; }
+  .login-box p { font-size: 13px; color: #888; margin-bottom: 20px; }
+  .login-box input { width: 100%; padding: 10px 14px; background: #0f0f1a; color: #fff; border: 1px solid #3a3a5a; border-radius: 6px; font-size: 16px; margin-bottom: 12px; }
+  .login-box button { width: 100%; padding: 10px; background: #448aff; color: #fff; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: 600; }
+  .login-box button:hover { background: #2979ff; }
+  .login-error { color: #ff5252; font-size: 13px; margin-top: 10px; display: none; }
+  .logout-btn { background: none; border: 1px solid #ff5252; color: #ff5252; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-left: auto; }
+  .logout-btn:hover { background: #ff5252; color: #fff; }
+
+  @media (max-width: 768px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Login Overlay -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <h2>🔒 АДМИН-ПАНЕЛЬ</h2>
+    <p>ХОЛДИНГ — трекер задач</p>
+    <input type="password" id="passwordInput" placeholder="Введите пароль" onkeydown="if(event.key==='Enter')checkPassword()">
+    <button onclick="checkPassword()">Войти</button>
+    <div class="login-error" id="loginError">Неверный пароль</div>
+  </div>
+</div>
+
+<div class="header">
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;">
+    <h1>📊 ХОЛДИНГ — АДМИН-ПАНЕЛЬ</h1>
+    <button class="logout-btn" onclick="logout()">Выйти</button>
+  </div>
+  <div class="meta" id="metaInfo">Загрузка...</div>
+  <div class="nav">
+    <a href="index.html">← Публичная доска</a>
+  </div>
+  <div class="filters">
+    <select id="filterCompany" onchange="renderDashboard()"><option value="">Все компании</option></select>
+    <select id="filterPriority" onchange="renderDashboard()"><option value="">Любой приоритет</option><option value="high">Высокий</option><option value="medium">Средний</option><option value="low">Низкий</option></select>
+    <input type="text" id="searchInput" placeholder="🔍 Поиск по задачам..." oninput="renderDashboard()">
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div class="dashboard-grid" id="dashboardContent" style="display:none;">
+
+  <!-- Row 1: Summary Stats -->
+  <div class="dashboard-card full-width">
+    <h3>Общая статистика</h3>
+    <div class="stat-row" id="summaryStats"></div>
+  </div>
+
+  <!-- Row 2: Charts side by side -->
+  <div class="dashboard-card">
+    <h3>По компаниям (круговая)</h3>
+    <canvas id="pieChart"></canvas>
+  </div>
+  <div class="dashboard-card">
+    <h3>По статусам (столбчатая)</h3>
+    <canvas id="barChart"></canvas>
+  </div>
+
+  <!-- Row 3: More charts -->
+  <div class="dashboard-card">
+    <h3>Выполнение по компаниям (%)</h3>
+    <canvas id="completionChart"></canvas>
+  </div>
+  <div class="dashboard-card">
+    <h3>Приоритеты (круговая)</h3>
+    <canvas id="priorityChart"></canvas>
+  </div>
+
+  <!-- Row 4: per-company completion table + full table -->
+  <div class="dashboard-card full-width">
+    <h3>Процент выполнения по компаниям</h3>
+    <div id="companyCompletionTable"></div>
+  </div>
+
+  <div class="dashboard-card full-width">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(event, 'tasksTab')">📋 Все задачи</button>
+      <button class="tab-btn" onclick="switchTab(event, 'historyTab')">📜 История (все компании)</button>
+    </div>
+    
+    <div id="tasksTab" class="tab-content active">
+      <div class="table-wrap" id="tasksTable"></div>
+    </div>
+    
+    <div id="historyTab" class="tab-content">
+      <input type="text" class="history-search" id="historySearch" placeholder="🔍 Поиск в истории..." oninput="renderHistory()">
+      <div class="history-list" id="historyList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== AUTH ==========
+const PASSWORD = 'klava2026';
+const STORAGE_KEY = 'kanban_auth';
+
+function checkPassword() {
+  const pwd = document.getElementById('passwordInput').value;
+  if (pwd === PASSWORD) {
+    sessionStorage.setItem(STORAGE_KEY, '1');
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('dashboardContent').style.display = 'grid';
+    loadData();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem(STORAGE_KEY);
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('dashboardContent').style.display = 'none';
+}
+
+// Check auth on load
+if (sessionStorage.getItem(STORAGE_KEY) === '1') {
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('dashboardContent').style.display = 'grid';
+}
+
+// ========== DATA ==========
+let tasks = [];
+let allHistory = [];
+let chartInstances = {};
+
+// Company colors for charts
+const COMPANY_COLORS = {
+  'АрхДетали': '#6a1b9a',
+  'Академия Комфорта': '#2e7d32',
+  'СВ-Клининг': '#1565c0',
+  'НейроСфера': '#f9a825',
+  'Техника': '#c62828',
+  'Люди': '#4a148c'
+};
+const COMPANY_COLORS_ARRAY = ['#6a1b9a','#2e7d32','#1565c0','#f9a825','#c62828','#4a148c'];
+
+function getCompanyColor(company, idx) {
+  return COMPANY_COLORS[company] || COMPANY_COLORS_ARRAY[idx % COMPANY_COLORS_ARRAY.length];
+}
+
+function companyClass(c) {
+  return 'cmp-' + c.replace(/ /g, '');
+}
+
+function statusLabel(s) {
+  const map = { 'todo': 'TO DO', 'in_progress': 'IN PROGRESS', 'done': 'DONE', 'archive': 'ARCHIVE' };
+  return map[s] || s;
+}
+
+function formatDate(d) {
+  return d ? d.replace(/-/g, '.') : '-';
+}
+
+function loadData() {
+  Promise.all([
+    fetch('data/tasks.json').then(r => r.json()),
+    // Try to load all history files from data directory listing... 
+    // For simplicity, we'll load the current and any we know about
+    fetch('data/tasks.json').then(r => r.json())
+  ]).then(([data]) => {
+    tasks = data.tasks;
+    document.getElementById('metaInfo').textContent = `Обновлено: ${data.meta.updated} | Компаний: ${data.meta.companies.length} | Задач: ${tasks.length}`;
+    
+    // Build history from task histories
+    allHistory = [];
+    tasks.forEach(t => {
+      if (t.history && t.history.length) {
+        t.history.forEach(h => {
+          allHistory.push({
+            date: h.date,
+            company: t.company,
+            taskId: t.id,
+            taskTitle: t.title,
+            event: h.event
+          });
+        });
+      }
+    });
+    allHistory.sort((a, b) => b.date.localeCompare(a.date));
+    
+    // Fill filter
+    const fc = document.getElementById('filterCompany');
+    data.meta.companies.forEach(c => {
+      fc.innerHTML += `<option value="${c}">${c}</option>`;
+    });
+    
+    renderDashboard();
+    renderHistory();
+  }).catch(e => {
+    document.getElementById('summaryStats').innerHTML = `<p style="color:#ff5252">Ошибка загрузки: ${e.message}</p>`;
+  });
+}
+
+// Auto-load if already authed
+if (sessionStorage.getItem(STORAGE_KEY) === '1') {
+  loadData();
+}
+
+// ========== TAB SWITCHING ==========
+function switchTab(event, tabId) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+}
+
+// ========== DASHBOARD RENDERING ==========
+function renderDashboard() {
+  const companyFilter = document.getElementById('filterCompany').value;
+  const priorityFilter = document.getElementById('filterPriority').value;
+  const search = document.getElementById('searchInput').value.toLowerCase();
+
+  let filtered = tasks.filter(t => {
+    if (companyFilter && t.company !== companyFilter) return false;
+    if (priorityFilter && t.priority !== priorityFilter) return false;
+    if (search) {
+      const hay = (t.title + ' ' + (t.description||'') + ' ' + (t.company||'')).toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  renderSummaryStats(filtered);
+  renderPieChart(filtered);
+  renderBarChart(filtered);
+  renderCompletionChart(filtered);
+  renderPriorityChart(filtered);
+  renderCompanyCompletionTable(filtered);
+  renderTasksTable(filtered);
+}
+
+function renderSummaryStats(filtered) {
+  const total = filtered.length;
+  const todo = filtered.filter(t => t.status === 'todo').length;
+  const inProgress = filtered.filter(t => t.status === 'in_progress').length;
+  const done = filtered.filter(t => t.status === 'done').length;
+  const archive = filtered.filter(t => t.status === 'archive').length;
+  const high = filtered.filter(t => t.priority === 'high').length;
+  const companies = new Set(filtered.map(t => t.company)).size;
+
+  document.getElementById('summaryStats').innerHTML = `
+    <div class="stat-cell"><span class="num">${total}</span><span class="label">Всего задач</span></div>
+    <div class="stat-cell"><span class="num" style="color:#ffd700">${todo}</span><span class="label">TO DO</span></div>
+    <div class="stat-cell"><span class="num" style="color:#00e676">${inProgress}</span><span class="label">В РАБОТЕ</span></div>
+    <div class="stat-cell"><span class="num" style="color:#448aff">${done}</span><span class="label">ГОТОВО</span></div>
+    <div class="stat-cell"><span class="num" style="color:#888">${archive}</span><span class="label">АРХИВ</span></div>
+    <div class="stat-cell"><span class="num" style="color:#ff5252">${high}</span><span class="label">Высокий приоритет</span></div>
+    <div class="stat-cell"><span class="num">${companies}</span><span class="label">Компании</span></div>
+  `;
+}
+
+function renderPieChart(filtered) {
+  const ctx = document.getElementById('pieChart').getContext('2d');
+  const byCompany = {};
+  filtered.forEach(t => { byCompany[t.company] = (byCompany[t.company]||0) + 1; });
+  
+  destroyChart('pieChart');
+  const companies = Object.keys(byCompany);
+  const values = Object.values(byCompany);
+  const colors = companies.map((c,i) => getCompanyColor(c, i));
+  
+  chartInstances['pieChart'] = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: companies,
+      datasets: [{
+        data: values,
+        backgroundColor: colors,
+        borderColor: '#0f0f1a',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#aaa', padding: 12 } }
+      }
+    }
+  });
+}
+
+function renderBarChart(filtered) {
+  const ctx = document.getElementById('barChart').getContext('2d');
+  const statuses = ['todo', 'in_progress', 'done', 'archive'];
+  const statusLabels = ['TO DO', 'IN PROGRESS', 'DONE', 'ARCHIVE'];
+  const statusColors = ['#ffd700', '#00e676', '#448aff', '#888'];
+  
+  const companies = [...new Set(filtered.map(t => t.company))];
+  const byStatus = {};
+  companies.forEach(c => { byStatus[c] = {}; statuses.forEach(s => byStatus[c][s] = 0); });
+  filtered.forEach(t => {
+    if (!byStatus[t.company]) byStatus[t.company] = {};
+    byStatus[t.company][t.status] = (byStatus[t.company][t.status] || 0) + 1;
+  });
+  
+  destroyChart('barChart');
+  
+  const datasets = statuses.map((s, si) => ({
+    label: statusLabels[si],
+    data: companies.map(c => byStatus[c][s] || 0),
+    backgroundColor: statusColors[si],
+    borderRadius: 3
+  }));
+  
+  chartInstances['barChart'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: companies,
+      datasets: datasets
+    },
+    options: {
+      responsive: true,
+      scales: {
+        x: { stacked: true, ticks: { color: '#aaa' }, grid: { color: '#2a2a4a' } },
+        y: { stacked: true, ticks: { color: '#888', stepSize: 1 }, grid: { color: '#2a2a4a' } }
+      },
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#aaa', padding: 12 } }
+      }
+    }
+  });
+}
+
+function renderCompletionChart(filtered) {
+  const ctx = document.getElementById('completionChart').getContext('2d');
+  const companies = [...new Set(filtered.map(t => t.company))];
+  
+  let doneCounts = {};
+  let totalCounts = {};
+  companies.forEach(c => { doneCounts[c] = 0; totalCounts[c] = 0; });
+  filtered.forEach(t => {
+    totalCounts[t.company] = (totalCounts[t.company] || 0) + 1;
+    if (t.status === 'done') doneCounts[t.company] = (doneCounts[t.company] || 0) + 1;
+  });
+  
+  const percentages = companies.map(c => totalCounts[c] > 0 ? Math.round((doneCounts[c] / totalCounts[c]) * 100) : 0);
+  const colors = companies.map((c,i) => getCompanyColor(c, i));
+  
+  destroyChart('completionChart');
+  
+  chartInstances['completionChart'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: companies.map(c => c + ` (${doneCounts[c]||0}/${totalCounts[c]||0})`),
+      datasets: [{
+        label: '% выполнения',
+        data: percentages,
+        backgroundColor: colors,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      scales: {
+        x: { min: 0, max: 100, ticks: { color: '#888', callback: v => v + '%' }, grid: { color: '#2a2a4a' } },
+        y: { ticks: { color: '#aaa' }, grid: { color: '#2a2a4a' } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ctx.parsed.x + '%' } }
+      }
+    }
+  });
+}
+
+function renderPriorityChart(filtered) {
+  const ctx = document.getElementById('priorityChart').getContext('2d');
+  const priorities = ['high', 'medium', 'low'];
+  const priorityLabels = ['Высокий', 'Средний', 'Низкий'];
+  const priorityColors = ['#ff5252', '#ffd740', '#69f0ae'];
+  
+  const counts = priorities.map(p => filtered.filter(t => t.priority === p).length);
+  
+  destroyChart('priorityChart');
+  
+  chartInstances['priorityChart'] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: priorityLabels,
+      datasets: [{
+        data: counts,
+        backgroundColor: priorityColors,
+        borderColor: '#0f0f1a',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#aaa', padding: 12 } }
+      }
+    }
+  });
+}
+
+function renderCompanyCompletionTable(filtered) {
+  const companies = [...new Set(filtered.map(t => t.company))];
+  const statuses = { todo: 0, in_progress: 0, done: 0, archive: 0 };
+  
+  let html = '<div class="table-wrap"><table><thead><tr><th>Компания</th><th>Всего</th><th>TO DO</th><th>В работе</th><th>Готово</th><th>Архив</th><th>% выполнения</th></tr></thead><tbody>';
+  
+  companies.forEach(c => {
+    const ct = filtered.filter(t => t.company === c);
+    const total = ct.length;
+    const tdo = ct.filter(t => t.status === 'todo').length;
+    const ip = ct.filter(t => t.status === 'in_progress').length;
+    const dn = ct.filter(t => t.status === 'done').length;
+    const ar = ct.filter(t => t.status === 'archive').length;
+    const pct = total > 0 ? Math.round((dn / total) * 100) : 0;
+    
+    html += `<tr>
+      <td><span class="cmp-${c.replace(/ /g,'')}" style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">${c}</span></td>
+      <td><strong>${total}</strong></td>
+      <td>${tdo}</td>
+      <td>${ip}</td>
+      <td><strong style="color:#448aff">${dn}</strong></td>
+      <td>${ar}</td>
+      <td><strong>${pct}%</strong></td>
+    </tr>`;
+  });
+  
+  html += '</tbody></table></div>';
+  document.getElementById('companyCompletionTable').innerHTML = html;
+}
+
+function renderTasksTable(filtered) {
+  let html = '<div class="table-wrap"><table><thead><tr><th>ID</th><th>Компания</th><th>Задача</th><th>Статус</th><th>Приоритет</th><th>Создана</th><th>Теги</th></tr></thead><tbody>';
+  
+  filtered.forEach(t => {
+    const pClass = 'badge-' + (t.priority || 'medium');
+    const sClass = 'badge-' + (t.status === 'in_progress' ? 'progress' : t.status || 'todo');
+    html += `<tr>
+      <td style="color:#666">${t.id}</td>
+      <td><span class="cmp-${t.company.replace(/ /g,'')}" style="padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600">${t.company}</span></td>
+      <td><strong>${t.title}</strong></td>
+      <td><span class="badge ${sClass}">${statusLabel(t.status)}</span></td>
+      <td><span class="badge ${pClass}">${t.priority}</span></td>
+      <td style="color:#888;font-size:12px">${formatDate(t.created)}</td>
+      <td>${(t.tags||[]).map(tg => `<span class="tag-sm">${tg}</span>`).join(' ')}</td>
+    </tr>`;
+  });
+  
+  html += '</tbody></table></div>';
+  document.getElementById('tasksTable').innerHTML = html;
+}
+
+function renderHistory() {
+  const search = document.getElementById('historySearch').value.toLowerCase();
+  let items = allHistory;
+  if (search) {
+    items = items.filter(h => (h.event + ' ' + h.taskTitle + ' ' + h.company).toLowerCase().includes(search));
+  }
+  
+  let html = '';
+  let lastDate = '';
+  items.forEach(h => {
+    const dateStr = formatDate(h.date);
+    const dateHeader = dateStr !== lastDate ? `<div style="color:#888;font-size:11px;padding:8px 0 4px;text-transform:uppercase;letter-spacing:1px">${dateStr}</div>` : '';
+    lastDate = dateStr;
+    html += dateHeader;
+    html += `<div class="history-item">
+      <div class="h-date">${dateStr}</div>
+      <div>
+        <span class="cmp-${h.company.replace(/ /g,'')}" style="padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600">${h.company}</span>
+        <span style="color:#666;font-size:11px">${h.taskId}</span>
+        <span class="h-event">${h.event}</span>
+      </div>
+    </div>`;
+  });
+  
+  if (!items.length) {
+    html = '<p style="color:#666;padding:10px">История не найдена</p>';
+  }
+  
+  document.getElementById('historyList').innerHTML = html;
+}
+
+function destroyChart(id) {
+  if (chartInstances[id]) {
+    chartInstances[id].destroy();
+    delete chartInstances[id];
+  }
+}
+
+</script>
+</body>
+</html>

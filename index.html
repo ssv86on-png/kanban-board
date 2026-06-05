@@ -10,6 +10,7 @@
   .header { background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 20px; border-bottom: 1px solid #2a2a4a; position: sticky; top: 0; z-index: 100; }
   .header h1 { font-size: 24px; color: #fff; margin-bottom: 5px; }
   .header .meta { font-size: 12px; color: #888; }
+  .header .by { font-size: 11px; color: #666; margin-top: 4px; }
   .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
   .filters select, .filters input { background: #1e1e35; color: #e0e0e0; border: 1px solid #3a3a5a; padding: 8px 12px; border-radius: 6px; font-size: 14px; }
   .filters input { flex: 1; min-width: 200px; }
@@ -48,6 +49,8 @@
   .modal-content .history-item { padding: 8px 0; border-bottom: 1px solid #2a2a4a; font-size: 13px; }
   .modal-content .history-item .date { color: #888; font-size: 11px; }
   .modal-close { float: right; background: none; border: none; color: #888; font-size: 24px; cursor: pointer; }
+  .admin-link { display: block; text-align: center; padding: 8px; margin: 10px 20px 0; background: #1e1e35; border: 1px solid #3a3a5a; border-radius: 6px; font-size: 12px; color: #666; }
+  .admin-link a { color: #448aff; text-decoration: none; }
   @media (max-width: 768px) {
     .board { flex-direction: column; padding: 10px; }
     .column { min-width: unset; max-width: unset; }
@@ -60,6 +63,7 @@
 <div class="header">
   <h1>🗂 ХОЛДИНГ — ТРЕКЕР ЗАДАЧ</h1>
   <div class="meta" id="metaInfo">Загрузка...</div>
+  <div class="by">Сделано с ❤️ для Павлика и команды ХОЛДИНГА</div>
   <div class="filters">
     <select id="filterCompany" onchange="render()"><option value="">Все компании</option></select>
     <select id="filterPriority" onchange="render()"><option value="">Любой приоритет</option><option value="high">Высокий</option><option value="medium">Средний</option><option value="low">Низкий</option></select>
@@ -79,6 +83,8 @@
     <div id="modalBody"></div>
   </div>
 </div>
+
+<div class="admin-link">🔒 <a href="admin.html">Панель управления</a> — статистика, графики, история (только для авторизованных)</div>
 
 <script>
 let tasks = [];
