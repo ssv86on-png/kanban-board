@@ -1,0 +1,399 @@
+{
+  "meta": {
+    "title": "ХОЛДИНГ — ТРЕКЕР ЗАДАЧ",
+    "version": "1.0",
+    "updated": "2026-06-05T19:40:17+03:00",
+    "companies": [
+      "АрхДетали",
+      "Академия Комфорта",
+      "СВ-Клининг",
+      "НейроСфера",
+      "Техника",
+      "Люди"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "T001",
+      "company": "АрхДетали",
+      "title": "Зарегистрировать кабинет Авито",
+      "status": "todo",
+      "priority": "high",
+      "created": "2026-05-29",
+      "updated": "2026-06-05",
+      "description": "БЛОКЕР: нужен домашний/мобильный IP, Docker IP заблокирован",
+      "depends_on": [],
+      "tags": [
+        "avito",
+        "blocker"
+      ],
+      "history": [
+        {
+          "date": "2026-05-29",
+          "event": "Создана. Client ID + Secret получены"
+        },
+        {
+          "date": "2026-06-05",
+          "event": "XML-фид создан, изображения на catbox.moe"
+        }
+      ]
+    },
+    {
+      "id": "T002",
+      "company": "АрхДетали",
+      "title": "Опубликовать 3 объявления Авито",
+      "status": "todo",
+      "priority": "high",
+      "created": "2026-05-29",
+      "updated": "2026-06-05",
+      "description": "После регистрации кабинета и настройки автозагрузки XML",
+      "depends_on": [
+        "T001"
+      ],
+      "tags": [
+        "avito"
+      ],
+      "history": [
+        {
+          "date": "2026-06-05",
+          "event": "Тексты объявлений готовы, XML на catbox.moe"
+        }
+      ]
+    },
+    {
+      "id": "T003",
+      "company": "Академия Комфорта",
+      "title": "Авито — настроить автозагрузку XML",
+      "status": "todo",
+      "priority": "high",
+      "created": "2026-05-29",
+      "updated": "2026-06-05",
+      "description": "Кабинет АК уже существует (sereg-86@mail.ru). Нужно активировать автозагрузку с телефона/дома",
+      "depends_on": [],
+      "tags": [
+        "avito"
+      ],
+      "history": [
+        {
+          "date": "2026-05-29",
+          "event": "Кабинет найден, XML-фид создан"
+        }
+      ]
+    },
+    {
+      "id": "T004",
+      "company": "НейроСфера",
+      "title": "Развернуть бота Нейросферы (@Neurosphereiaai_bot)",
+      "status": "todo",
+      "priority": "high",
+      "created": "2026-05-16",
+      "updated": "2026-06-05",
+      "description": "Новый Hermes-профиль + Telegram бот. Нужен токен от @BotFather",
+      "depends_on": [],
+      "tags": [
+        "bot",
+        "telegram"
+      ],
+      "history": [
+        {
+          "date": "2026-05-16",
+          "event": "Бот перестал отвечать (401 Unauthorized)"
+        },
+        {
+          "date": "2026-05-20",
+          "event": "Файлы бота пропали с сервера"
+        },
+        {
+          "date": "2026-06-05",
+          "event": "Планируется развернуть как Hermes-профиль"
+        }
+      ]
+    },
+    {
+      "id": "T005",
+      "company": "НейроСфера",
+      "title": "Решебник задач — конвертировать 385 задач в WIPE-формат",
+      "status": "todo",
+      "priority": "medium",
+      "created": "2026-06-05",
+      "updated": "2026-06-05",
+      "description": "Есть 926 задач в DOCX, 15 готовы в WIPE. Нужно конвертировать 385 для Университета программирования",
+      "depends_on": [],
+      "tags": [
+        "education",
+        "wipe"
+      ],
+      "history": [
+        {
+          "date": "2026-06-05",
+          "event": "Проведён аудит: повторов нет, 1 дубликат в Codeforces"
+        }
+      ]
+    },
+    {
+      "id": "T006",
+      "company": "Техника",
+      "title": "Настроить OCR (tesseract) для фото смет и чертежей",
+      "status": "todo",
+      "priority": "high",
+      "created": "2026-06-05",
+      "updated": "2026-06-05",
+      "description": "Установить tesseract-ocr, научиться читать размеры с чертежей и фото",
+      "depends_on": [],
+      "tags": [
+        "ocr",
+        "photo",
+        "smeta"
+      ],
+      "history": [
+        {
+          "date": "2026-06-05",
+          "event": "Проблема: DeepSeek не видит картинки. Нужен OCR"
+        }
+      ]
+    },
+    {
+      "id": "T007",
+      "company": "Техника",
+      "title": "Подключить GetCourse API",
+      "status": "todo",
+      "priority": "medium",
+      "created": "2026-06-05",
+      "updated": "2026-06-05",
+      "description": "Нужен API-ключ от Сергея. Интеграция с почтой и заявками",
+      "depends_on": [],
+      "tags": [
+        "getcourse",
+        "api"
+      ],
+      "history": []
+    },
+    {
+      "id": "T008",
+      "company": "Техника",
+      "title": "Hermes Desktop на компьютер Сергея",
+      "status": "todo",
+      "priority": "medium",
+      "created": "2026-06-05",
+      "updated": "2026-06-05",
+      "description": "Установить Hermes Desktop на ПК. Работа с капчами, локальный браузер, VS Code",
+      "depends_on": [],
+      "tags": [
+        "desktop",
+        "hermes"
+      ],
+      "history": []
+    },
+    {
+      "id": "T009",
+      "company": "Техника",
+      "title": "Развернуть агентов под компании (Hermes-профили)",
+      "status": "todo",
+      "priority": "high",
+      "created": "2026-06-03",
+      "updated": "2026-06-05",
+      "description": "4 профиля: svcleaning, neurosphere, akademiya, archdetali. Каждому свой Telegram-бот",
+      "depends_on": [],
+      "tags": [
+        "agents",
+        "profiles"
+      ],
+      "history": [
+        {
+          "date": "2026-06-03",
+          "event": "Запланировано Сергеем. Концепция согласована"
+        },
+        {
+          "date": "2026-06-05",
+          "event": "Планируется на выходные"
+        }
+      ]
+    },
+    {
+      "id": "T010",
+      "company": "Техника",
+      "title": "Олимпиадный бот — развернуть на сервере Клавы (103-й)",
+      "status": "todo",
+      "priority": "medium",
+      "created": "2026-06-05",
+      "updated": "2026-06-05",
+      "description": "Бот олимпиадных задач, не выгружен. Развернуть на 103.54.18.57 рядом с Клавой",
+      "depends_on": [],
+      "tags": [
+        "bot",
+        "olympiad"
+      ],
+      "history": []
+    },
+    {
+      "id": "T011",
+      "company": "НейроСфера",
+      "title": "Daily Report Agent (@Neurosphereagent_bot)",
+      "status": "todo",
+      "priority": "medium",
+      "created": "2026-05-16",
+      "updated": "2026-06-05",
+      "description": "Vercel + Supabase + Claude. Развёрнут но не работает. Токен есть в credentials-registry",
+      "depends_on": [],
+      "tags": [
+        "bot",
+        "report"
+      ],
+      "history": [
+        {
+          "date": "2026-05-16",
+          "event": "Запущен. Работал"
+        },
+        {
+          "date": "2026-06-05",
+          "event": "Не работает. Нужна диагностика"
+        }
+      ]
+    },
+    {
+      "id": "T012",
+      "company": "СВ-Клининг",
+      "title": "Быстрый просчёт КП с почты",
+      "status": "todo",
+      "priority": "high",
+      "created": "2026-06-05",
+      "updated": "2026-06-05",
+      "description": "Сделать шаблон быстрого просчёта для заявок с почты — считать и с Сергеем согласовывать",
+      "depends_on": [],
+      "tags": [
+        "kp",
+        "cleaning"
+      ],
+      "history": []
+    },
+    {
+      "id": "T013",
+      "company": "АрхДетали",
+      "title": "Сметы — исправить ошибки с объёмами",
+      "status": "in_progress",
+      "priority": "high",
+      "created": "2026-05-26",
+      "updated": "2026-06-05",
+      "description": "Перестать придумывать объёмы. Брать из реальных замеров/чертежей. Проверить все 5 смет",
+      "depends_on": [],
+      "tags": [
+        "smeta",
+        "fix"
+      ],
+      "history": [
+        {
+          "date": "2026-05-26",
+          "event": "Клиент сказал 'неправильные размеры'"
+        },
+        {
+          "date": "2026-06-05",
+          "event": "Аудит Дубровки: звукоизоляция добавлена. Остальные сметы требуют проверки"
+        }
+      ]
+    },
+    {
+      "id": "T014",
+      "company": "Люди",
+      "title": "Обновить пароль info@archdetali.ru",
+      "status": "todo",
+      "priority": "high",
+      "created": "2026-05-14",
+      "updated": "2026-06-05",
+      "description": "Пароль mqdjvzlyhfotpedv не работает (AUTHENTICATIONFAILED). Нужен новый от Сергея",
+      "depends_on": [],
+      "tags": [
+        "email",
+        "password"
+      ],
+      "history": [
+        {
+          "date": "2026-05-14",
+          "event": "Начал работать"
+        },
+        {
+          "date": "2026-05-22",
+          "event": "Пароль перестал работать (22 дня)"
+        },
+        {
+          "date": "2026-06-05",
+          "event": "Всё ещё не работает. Клава тоже просит"
+        }
+      ]
+    },
+    {
+      "id": "T015",
+      "company": "Техника",
+      "title": "Сметы — обучение по фото/дизайн-проектам",
+      "status": "todo",
+      "priority": "high",
+      "created": "2026-06-05",
+      "updated": "2026-06-05",
+      "description": "Научиться делать чёткие сметы по фото, дизайн-проектам, чертежам. OCR + сверка с прайсом 606",
+      "depends_on": [
+        "T006",
+        "T013"
+      ],
+      "tags": [
+        "smeta",
+        "ocr",
+        "photo"
+      ],
+      "history": []
+    },
+    {
+      "id": "T016",
+      "company": "Академия Комфорта",
+      "title": "Смета Дубровка — финализировать",
+      "status": "in_progress",
+      "priority": "high",
+      "created": "2026-05-29",
+      "updated": "2026-06-05",
+      "description": "Капремонт. Звукоизоляция добавлена. Вариант А: 1 405 566₽, Вариант Б: 1 435 206₽. Ждёт замеров",
+      "depends_on": [],
+      "tags": [
+        "smeta",
+        "dubrovka"
+      ],
+      "history": [
+        {
+          "date": "2026-05-29",
+          "event": "Смета отправлена (1 192 194₽)"
+        },
+        {
+          "date": "2026-06-05",
+          "event": "Аудит: добавлена звукоизоляция (+113 020₽)"
+        }
+      ]
+    },
+    {
+      "id": "T017",
+      "company": "Техника",
+      "title": "Открыть SSH на 103.54.18.57 (для Клавы)",
+      "status": "todo",
+      "priority": "high",
+      "created": "2026-05-20",
+      "updated": "2026-06-05",
+      "description": "Все порты закрыты. Клава просит открыть доступ. Нужен доступ Сергея к хостингу",
+      "depends_on": [],
+      "tags": [
+        "ssh",
+        "server",
+        "blocker"
+      ],
+      "history": [
+        {
+          "date": "2026-05-20",
+          "event": "SSH потерян"
+        },
+        {
+          "date": "2026-06-04",
+          "event": "Восстановлен через пароль IaaI9213707!"
+        },
+        {
+          "date": "2026-06-05",
+          "event": "Снова недоступен (Connection refused)"
+        }
+      ]
+    }
+  ]
+}

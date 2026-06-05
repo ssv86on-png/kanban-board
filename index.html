@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ХОЛДИНГ — ТРЕКЕР ЗАДАЧ</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f1a; color: #e0e0e0; min-height: 100vh; }
+  .header { background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 20px; border-bottom: 1px solid #2a2a4a; position: sticky; top: 0; z-index: 100; }
+  .header h1 { font-size: 24px; color: #fff; margin-bottom: 5px; }
+  .header .meta { font-size: 12px; color: #888; }
+  .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .filters select, .filters input { background: #1e1e35; color: #e0e0e0; border: 1px solid #3a3a5a; padding: 8px 12px; border-radius: 6px; font-size: 14px; }
+  .filters input { flex: 1; min-width: 200px; }
+  .stats { display: flex; gap: 10px; padding: 15px 20px; flex-wrap: wrap; background: #141428; }
+  .stat-card { background: #1a1a30; padding: 10px 16px; border-radius: 8px; border: 1px solid #2a2a4a; font-size: 13px; }
+  .stat-card .num { font-size: 22px; font-weight: bold; display: block; }
+  .stat-card .label { color: #888; font-size: 11px; text-transform: uppercase; }
+  .board { display: flex; gap: 16px; padding: 20px; overflow-x: auto; min-height: 60vh; }
+  .column { min-width: 320px; max-width: 380px; flex-shrink: 0; }
+  .column-title { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; }
+  .col-todo .column-title { background: #2d2d1a; color: #ffd700; }
+  .col-progress .column-title { background: #1a2d1a; color: #00e676; }
+  .col-done .column-title { background: #1a1a2d; color: #448aff; }
+  .col-archive .column-title { background: #2a1a1a; color: #888; }
+  .task-card { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 8px; padding: 12px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; }
+  .task-card:hover { border-color: #4a4a7a; transform: translateX(2px); }
+  .task-card .company-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-bottom: 6px; }
+  .company-АрхДетали { background: #6a1b9a; color: #fff; }
+  .company-Академия { background: #2e7d32; color: #fff; }
+  .company-СВ-Клининг { background: #1565c0; color: #fff; }
+  .company-НейроСфера { background: #f9a825; color: #000; }
+  .company-Техника { background: #c62828; color: #fff; }
+  .company-Люди { background: #4a148c; color: #fff; }
+  .task-card .title { font-size: 14px; font-weight: 500; margin-bottom: 4px; color: #fff; }
+  .task-card .desc { font-size: 12px; color: #888; margin-bottom: 6px; }
+  .task-card .meta-row { display: flex; gap: 8px; font-size: 11px; color: #666; flex-wrap: wrap; }
+  .task-card .priority-high { border-left: 3px solid #ff5252; }
+  .task-card .priority-medium { border-left: 3px solid #ffd740; }
+  .task-card .priority-low { border-left: 3px solid #69f0ae; }
+  .tag { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 10px; background: #2a2a4a; color: #aaa; margin-right: 3px; }
+  .history-btn { background: none; border: 1px solid #3a3a5a; color: #888; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 10px; }
+  .history-btn:hover { background: #2a2a4a; }
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+  .modal-content { background: #1a1a2e; border: 1px solid #3a3a5a; border-radius: 12px; padding: 24px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; }
+  .modal-content h2 { font-size: 18px; margin-bottom: 12px; }
+  .modal-content .history-item { padding: 8px 0; border-bottom: 1px solid #2a2a4a; font-size: 13px; }
+  .modal-content .history-item .date { color: #888; font-size: 11px; }
+  .modal-close { float: right; background: none; border: none; color: #888; font-size: 24px; cursor: pointer; }
+  @media (max-width: 768px) {
+    .board { flex-direction: column; padding: 10px; }
+    .column { min-width: unset; max-width: unset; }
+    .header h1 { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🗂 ХОЛДИНГ — ТРЕКЕР ЗАДАЧ</h1>
+  <div class="meta" id="metaInfo">Загрузка...</div>
+  <div class="filters">
+    <select id="filterCompany" onchange="render()"><option value="">Все компании</option></select>
+    <select id="filterPriority" onchange="render()"><option value="">Любой приоритет</option><option value="high">Высокий</option><option value="medium">Средний</option><option value="low">Низкий</option></select>
+    <select id="filterTag" onchange="render()"><option value="">Любой тег</option></select>
+    <input type="text" id="searchInput" placeholder="🔍 Поиск по задачам..." oninput="render()">
+  </div>
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="board" id="board"></div>
+
+<div class="modal" id="taskModal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h2 id="modalTitle"></h2>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+let tasks = [];
+let allTags = new Set();
+let allCompanies = new Set();
+
+function getCompanyClass(company) {
+  const map = {
+    'АрхДетали': 'company-АрхДетали',
+    'Академия Комфорта': 'company-Академия',
+    'СВ-Клининг': 'company-СВ-Клининг',
+    'НейроСфера': 'company-НейроСфера',
+    'Техника': 'company-Техника',
+    'Люди': 'company-Люди'
+  };
+  return map[company] || 'company-АрхДетали';
+}
+
+function formatDate(d) {
+  return d.replace(/-/g, '.');
+}
+
+function priorityClass(p) {
+  return 'priority-' + (p || 'medium');
+}
+
+function statusLabel(s) {
+  const map = { 'todo': 'TO DO', 'in_progress': 'IN PROGRESS', 'done': 'DONE', 'archive': 'ARCHIVE' };
+  return map[s] || s;
+}
+
+function openModal(task) {
+  document.getElementById('modalTitle').innerHTML = `<span class="company-tag ${getCompanyClass(task.company)}">${task.company}</span> ${task.title}`;
+  let html = `<p style="color:#888;margin-bottom:12px">${task.description || ''}</p>`;
+  html += `<p><strong>Приоритет:</strong> ${task.priority} | <strong>Статус:</strong> ${statusLabel(task.status)}</p>`;
+  html += `<p><strong>Создана:</strong> ${formatDate(task.created)} | <strong>Обновлена:</strong> ${formatDate(task.updated)}</p>`;
+  if (task.depends_on && task.depends_on.length) {
+    html += `<p><strong>Зависит от:</strong> ${task.depends_on.join(', ')}</p>`;
+  }
+  if (task.tags && task.tags.length) {
+    html += `<p>${task.tags.map(t => `<span class="tag">${t}</span>`).join(' ')}</p>`;
+  }
+  if (task.history && task.history.length) {
+    html += `<h3 style="margin-top:16px;margin-bottom:8px">📜 История</h3>`;
+    task.history.forEach(h => {
+      html += `<div class="history-item"><span class="date">${formatDate(h.date)}</span> — ${h.event}</div>`;
+    });
+  }
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('taskModal').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('taskModal').style.display = 'none';
+}
+
+function render() {
+  const company = document.getElementById('filterCompany').value;
+  const priority = document.getElementById('filterPriority').value;
+  const tag = document.getElementById('filterTag').value;
+  const search = document.getElementById('searchInput').value.toLowerCase();
+
+  let filtered = tasks.filter(t => {
+    if (company && t.company !== company) return false;
+    if (priority && t.priority !== priority) return false;
+    if (tag && !(t.tags || []).includes(tag)) return false;
+    if (search) {
+      const hay = (t.title + ' ' + (t.description||'') + ' ' + (t.company||'')).toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  const columns = ['todo', 'in_progress', 'done', 'archive'];
+  const colLabels = ['📋 TO DO', '🔄 IN PROGRESS', '✅ DONE', '📦 ARCHIVE'];
+  const colClasses = ['col-todo', 'col-progress', 'col-done', 'col-archive'];
+
+  // Stats
+  const total = filtered.length;
+  const byCompany = {};
+  filtered.forEach(t => { byCompany[t.company] = (byCompany[t.company]||0) + 1; });
+  const statsHtml = `<div class="stat-card"><span class="num">${total}</span><span class="label">Всего задач</span></div>` +
+    Object.entries(byCompany).sort((a,b) => b[1]-a[1]).map(([c,n]) =>
+      `<div class="stat-card"><span class="num">${n}</span><span class="label">${c}</span></div>`
+    ).join('');
+  document.getElementById('stats').innerHTML = statsHtml;
+
+  // Board
+  let boardHtml = '';
+  columns.forEach((col, ci) => {
+    const colTasks = filtered.filter(t => (t.status || 'todo') === col);
+    boardHtml += `<div class="column ${colClasses[ci]}">`;
+    boardHtml += `<div class="column-title">${colLabels[ci]} (${colTasks.length})</div>`;
+    colTasks.sort((a, b) => {
+      const p = {high: 0, medium: 1, low: 2};
+      return (p[a.priority] || 1) - (p[b.priority] || 1);
+    });
+    colTasks.forEach(t => {
+      boardHtml += `<div class="task-card ${priorityClass(t.priority)}" onclick='openModal(${JSON.stringify(t).replace(/'/g,"&#39;")})'>`;
+      boardHtml += `<span class="company-tag ${getCompanyClass(t.company)}">${t.company}</span>`;
+      boardHtml += `<div class="title">${t.title}</div>`;
+      boardHtml += `<div class="meta-row">`;
+      boardHtml += `<span>🔖 ${statusLabel(t.status)}</span>`;
+      boardHtml += `<span>📅 ${formatDate(t.created)}</span>`;
+      if (t.tags && t.tags.length) {
+        boardHtml += t.tags.slice(0,3).map(tg => `<span class="tag">${tg}</span>`).join('');
+      }
+      boardHtml += `</div>`;
+      if (t.description) {
+        boardHtml += `<div class="desc">${t.description.substring(0,80)}${t.description.length > 80 ? '...' : ''}</div>`;
+      }
+      boardHtml += `<button class="history-btn" onclick="event.stopPropagation();openModal(${JSON.stringify(t).replace(/'/g,"&#39;")})">📜 история</button>`;
+      boardHtml += `</div>`;
+    });
+    boardHtml += `</div>`;
+  });
+  document.getElementById('board').innerHTML = boardHtml;
+}
+
+fetch('data/tasks.json')
+  .then(r => r.json())
+  .then(data => {
+    tasks = data.tasks;
+    document.getElementById('metaInfo').textContent = `Обновлено: ${data.meta.updated} | Компаний: ${data.meta.companies.length}`;
+    data.meta.companies.forEach(c => { allCompanies.add(c); });
+    tasks.forEach(t => { if (t.tags) t.tags.forEach(tg => allTags.add(tg)); });
+    document.getElementById('filterCompany').innerHTML = '<option value="">Все компании</option>' +
+      [...allCompanies].sort().map(c => `<option value="${c}">${c}</option>`).join('');
+    document.getElementById('filterTag').innerHTML = '<option value="">Любой тег</option>' +
+      [...allTags].sort().map(t => `<option value="${t}">${t}</option>`).join('');
+    render();
+  })
+  .catch(e => { document.getElementById('board').innerHTML = `<p style="padding:20px;color:#ff5252">Ошибка загрузки: ${e.message}</p>`; });
+</script>
+</body>
+</html>
